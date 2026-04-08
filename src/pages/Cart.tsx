@@ -22,7 +22,7 @@ export default function Cart() {
       <h1 className="text-2xl font-semibold text-gray-900 mb-8">Tu carrito</h1>
 
       <div className="flex flex-col gap-4">
-        {items.map((item, index) => (
+        {items.map((item) => (
           <div key={`${item.product.id}-${item.size}`}
             className="flex gap-4 items-center border border-gray-200 rounded-xl p-4">
 
