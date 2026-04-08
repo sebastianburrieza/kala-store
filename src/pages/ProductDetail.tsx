@@ -1,56 +1,34 @@
 import { useParams, Link } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { formatPrice } from '../utils/formatPrice'
 import { useCartStore } from '../store/cartStore'
-
-// Por ahora los mismos mock products — después vendrán de Supabase
-const mockProducts = [
-  {
-    id: '1',
-    name: 'Camisa lino beige',
-    price: 25000,
-    category: 'ropa' as const,
-    sizes: ['XS', 'S', 'M', 'L'],
-    images: ['https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=800'],
-    stock: 10,
-    description: 'Camisa de lino liviana, perfecta para el verano.',
-  },
-  {
-    id: '2',
-    name: 'Bolso cuero negro',
-    price: 48000,
-    category: 'accesorios' as const,
-    sizes: ['única'],
-    images: ['https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=800'],
-    stock: 5,
-    description: 'Bolso de cuero genuino con compartimentos internos.',
-  },
-  {
-    id: '3',
-    name: 'Vestido floral',
-    price: 32000,
-    category: 'ropa' as const,
-    sizes: ['XS', 'S', 'M'],
-    images: ['https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=800'],
-    stock: 8,
-    description: 'Vestido liviano con estampado floral.',
-  },
-  {
-    id: '4',
-    name: 'Cinturón trenzado',
-    price: 15000,
-    category: 'accesorios' as const,
-    sizes: ['S', 'M', 'L'],
-    images: ['https://images.unsplash.com/photo-1624222247344-550fb60583dc?w=800'],
-    stock: 0,
-    description: 'Cinturón trenzado a mano en cuero marrón.',
-  },
-]
+import { supabase } from '../lib/supabase'
+import type { Product } from '../types'
 
 export default function ProductDetail() {
   const { id } = useParams()
-  const product = mockProducts.find(p => p.id === id)
+  const addItem = useCartStore(state => state.addItem)
+  const [product, setProduct] = useState<Product | null>(null)
+  const [loading, setLoading] = useState(true)
   const [selectedSize, setSelectedSize] = useState<string | null>(null)
+
+  useEffect(() => {
+    async function fetchProduct() {
+      if (!id) return
+      const { data } = await supabase
+        .from('products')
+        .select('*')
+        .eq('id', id)
+        .single()
+      setProduct(data as Product ?? null)
+      setLoading(false)
+    }
+    fetchProduct()
+  }, [id])
+
+  if (loading) {
+    return <div className="text-center py-20 text-gray-400 text-sm">Cargando...</div>
+  }
 
   if (!product) {
     return (
@@ -63,14 +41,13 @@ export default function ProductDetail() {
     )
   }
 
-  const addItem = useCartStore(state => state.addItem)
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
 
       {/* Imagen */}
       <div className="bg-gray-100 rounded-2xl overflow-hidden aspect-square">
         <img
-          src={product.images[0]}
+          src={product.images?.[0]}
           alt={product.name}
           className="w-full h-full object-cover"
           onError={(e) => {
@@ -90,24 +67,26 @@ export default function ProductDetail() {
         <p className="text-gray-500">{product.description}</p>
 
         {/* Selector de talle */}
-        <div>
-          <p className="text-sm font-medium text-gray-900 mb-3">Talle</p>
-          <div className="flex gap-2">
-            {product.sizes.map(size => (
-              <button
-                key={size}
-                onClick={() => setSelectedSize(size)}
-                className={`px-4 py-2 rounded-lg border text-sm font-medium ${
-                  selectedSize === size
-                    ? 'bg-black text-white border-black'
-                    : 'bg-white text-gray-700 border-gray-200 hover:border-gray-400'
-                }`}
-              >
-                {size}
-              </button>
-            ))}
+        {product.sizes?.length > 0 && (
+          <div>
+            <p className="text-sm font-medium text-gray-900 mb-3">Talle</p>
+            <div className="flex gap-2 flex-wrap">
+              {product.sizes.map(size => (
+                <button
+                  key={size}
+                  onClick={() => setSelectedSize(size)}
+                  className={`px-4 py-2 rounded-lg border text-sm font-medium ${
+                    selectedSize === size
+                      ? 'bg-black text-white border-black'
+                      : 'bg-white text-gray-700 border-gray-200 hover:border-gray-400'
+                  }`}
+                >
+                  {size}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Botón agregar */}
         <button
