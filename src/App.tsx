@@ -9,6 +9,7 @@ import { useEffect } from 'react'
 import { useAuthStore } from './store/authStore'
 import Admin from './pages/Admin'
 import Orders from './pages/Orders'
+import ResetPassword from './pages/ResetPassword'
 
 function App() {
   const { loadUser } = useAuthStore()
@@ -28,6 +29,7 @@ function App() {
           <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/orders" element={<Orders />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
         </Routes>
       </main>
     </BrowserRouter>
