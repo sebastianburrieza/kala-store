@@ -15,7 +15,7 @@ export default function ProductCard({ product }: Props) {
     >
       <div className="bg-gray-100 rounded-xl overflow-hidden aspect-square mb-3">
         <img
-          src={product.images[0]}
+          src={product.images?.[0] || 'https://placehold.co/400x400?text=Sin+imagen'}
           alt={product.name}
           onError={(e) => {
             e.currentTarget.src = 'https://placehold.co/400x400?text=Sin+imagen'

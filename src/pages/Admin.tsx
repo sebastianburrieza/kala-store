@@ -24,6 +24,7 @@ export default function Admin() {
   const [loading, setLoading] = useState(false)
   const [uploadingImage, setUploadingImage] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
+  const [editingId, setEditingId] = useState<string | null>(null)
 
   useEffect(() => {
     if (!user?.is_admin) {
@@ -41,15 +42,33 @@ export default function Admin() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
-    const { error } = await supabase.from('products').insert(form)
+
+    const { error } = editingId
+      ? await supabase.from('products').update(form).eq('id', editingId)
+      : await supabase.from('products').insert(form)
+
     setLoading(false)
     if (error) {
       setMessage(`Error: ${error.message}`)
     } else {
-      setMessage('Producto agregado')
+      setMessage(editingId ? 'Producto actualizado' : 'Producto agregado')
       setForm(emptyProduct)
+      setEditingId(null)
       fetchProducts()
     }
+  }
+
+  function handleEdit(product: Product) {
+    const { id, ...rest } = product
+    setEditingId(id)
+    setForm(rest)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  function handleCancelEdit() {
+    setEditingId(null)
+    setForm(emptyProduct)
+    setMessage(null)
   }
 
   async function handleDelete(id: string) {
@@ -97,7 +116,17 @@ export default function Admin() {
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="flex flex-col gap-4 mb-12">
-        <h2 className="text-lg font-medium text-gray-800">Agregar producto</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-medium text-gray-800">
+            {editingId ? 'Editar producto' : 'Agregar producto'}
+          </h2>
+          {editingId && (
+            <button type="button" onClick={handleCancelEdit}
+              className="text-sm text-gray-400 hover:text-gray-600">
+              Cancelar
+            </button>
+          )}
+        </div>
 
         <input placeholder="Nombre" required value={form.name}
           onChange={e => setForm({ ...form, name: e.target.value })}
@@ -158,7 +187,7 @@ export default function Admin() {
 
         <button type="submit" disabled={loading}
           className="bg-black text-white rounded-xl py-3 text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-50">
-          {loading ? 'Guardando...' : 'Agregar producto'}
+          {loading ? 'Guardando...' : editingId ? 'Actualizar producto' : 'Agregar producto'}
         </button>
       </form>
 
@@ -171,10 +200,16 @@ export default function Admin() {
               <p className="font-medium text-gray-900 text-sm">{p.name}</p>
               <p className="text-xs text-gray-500">${p.price.toLocaleString('es-AR')} · {p.category}</p>
             </div>
-            <button onClick={() => handleDelete(p.id)}
-              className="text-red-400 hover:text-red-600 text-sm transition-colors">
-              Eliminar
-            </button>
+            <div className="flex gap-3">
+              <button onClick={() => handleEdit(p)}
+                className="text-blue-400 hover:text-blue-600 text-sm transition-colors">
+                Editar
+              </button>
+              <button onClick={() => handleDelete(p.id)}
+                className="text-red-400 hover:text-red-600 text-sm transition-colors">
+                Eliminar
+              </button>
+            </div>
           </div>
         ))}
       </div>
