@@ -1,43 +1,34 @@
-import { useEffect, useState } from 'react'
 import ProductCard from '../components/ProductCard'
-import { supabase } from '../lib/supabase'
-import type { Product } from '../types'
+import { useCatalog, FILTERS } from '../hooks/useCatalog'
 
-const FILTERS = ['todos', 'ropa', 'accesorios'] as const
-type Filter = typeof FILTERS[number]
+// Like a placeholder UITableViewCell while data loads
+function SkeletonCard() {
+  return (
+    <div>
+      <div className="bg-gray-200 rounded-xl aspect-square mb-3 animate-pulse" />
+      <div className="bg-gray-200 rounded h-4 w-3/4 mb-2 animate-pulse" />
+      <div className="bg-gray-200 rounded h-3 w-1/2 animate-pulse" />
+    </div>
+  )
+}
 
+// Only the View — zero logic here
 export default function Catalog() {
-  const [products, setProducts] = useState<Product[]>([])
-  const [filter, setFilter] = useState<Filter>('todos')
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    async function fetchProducts() {
-      setLoading(true)
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .order('created_at', { ascending: false })
-
-      if (error) {
-        setError(error.message)
-      } else {
-        setProducts(data as Product[])
-      }
-      setLoading(false)
-    }
-
-    fetchProducts()
-  }, [])
-
-  const filtered = filter === 'todos'
-    ? products
-    : products.filter(p => p.category === filter)
+  const { filtered, filter, setFilter, loading, error } = useCatalog()
 
   if (loading) return (
-    <div className="max-w-5xl mx-auto px-6 py-20 text-center text-gray-400">
-      Cargando productos...
+    <div className="max-w-5xl mx-auto px-6 py-10">
+      <div className="h-8 w-32 bg-gray-200 rounded mb-6 animate-pulse" />
+      <div className="flex gap-2 mb-8">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="bg-gray-200 rounded-full h-8 w-20 animate-pulse" />
+        ))}
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <SkeletonCard key={i} />
+        ))}
+      </div>
     </div>
   )
 

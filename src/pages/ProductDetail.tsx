@@ -1,32 +1,13 @@
 import { useParams, Link } from 'react-router-dom'
-import { useState, useEffect } from 'react'
 import { formatPrice } from '../utils/formatPrice'
-import { useCartStore } from '../store/cartStore'
-import { supabase } from '../lib/supabase'
-import { useToastStore } from '../store/toastStore'
-import type { Product } from '../types'
+import { useProductDetail } from '../hooks/useProductDetail'
 
+// Only the View — zero logic here
+// Like a SwiftUI View that reads from @StateObject vm
 export default function ProductDetail() {
   const { id } = useParams()
-  const addItem = useCartStore(state => state.addItem)
-  const { showToast } = useToastStore()
-  const [product, setProduct] = useState<Product | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [selectedSize, setSelectedSize] = useState<string | null>(null)
-
-  useEffect(() => {
-    async function fetchProduct() {
-      if (!id) return
-      const { data } = await supabase
-        .from('products')
-        .select('*')
-        .eq('id', id)
-        .single()
-      setProduct(data as Product ?? null)
-      setLoading(false)
-    }
-    fetchProduct()
-  }, [id])
+  const { product, loading, selectedSize, setSelectedSize, handleAddToCart }
+    = useProductDetail(id)
 
   if (loading) {
     return <div className="text-center py-20 text-gray-400 text-sm">Cargando...</div>
@@ -49,7 +30,7 @@ export default function ProductDetail() {
       {/* Imagen */}
       <div className="bg-gray-100 rounded-2xl overflow-hidden aspect-square">
         <img
-          src={product.images?.[0]}
+          src={product.images?.[0] || 'https://placehold.co/800x800?text=Sin+imagen'}
           alt={product.name}
           className="w-full h-full object-cover"
           onError={(e) => {
@@ -92,12 +73,7 @@ export default function ProductDetail() {
 
         {/* Botón agregar */}
         <button
-          onClick={() => {
-            if (selectedSize) {
-              addItem(product, selectedSize)
-              showToast('Producto agregado al carrito ✓')
-            }
-          }}
+          onClick={handleAddToCart}
           disabled={product.stock === 0 || !selectedSize}
           className="bg-black text-white py-4 rounded-xl font-medium hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
         >
