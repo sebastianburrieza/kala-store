@@ -10,6 +10,7 @@ import { useAuthStore } from './store/authStore'
 import Admin from './pages/Admin'
 import Orders from './pages/Orders'
 import ResetPassword from './pages/ResetPassword'
+import Toast from './components/Toast'
 
 function App() {
   const { loadUser } = useAuthStore()
@@ -20,6 +21,7 @@ function App() {
   return (
     <BrowserRouter>
       <Navbar />
+      <Toast />
       <main className="max-w-6xl mx-auto px-6 py-8">
         <Routes>
           <Route path="/" element={<Home />} />

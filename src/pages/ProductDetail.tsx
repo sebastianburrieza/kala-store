@@ -3,11 +3,13 @@ import { useState, useEffect } from 'react'
 import { formatPrice } from '../utils/formatPrice'
 import { useCartStore } from '../store/cartStore'
 import { supabase } from '../lib/supabase'
+import { useToastStore } from '../store/toastStore'
 import type { Product } from '../types'
 
 export default function ProductDetail() {
   const { id } = useParams()
   const addItem = useCartStore(state => state.addItem)
+  const { showToast } = useToastStore()
   const [product, setProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
   const [selectedSize, setSelectedSize] = useState<string | null>(null)
@@ -90,7 +92,12 @@ export default function ProductDetail() {
 
         {/* Botón agregar */}
         <button
-          onClick={() => selectedSize && addItem(product, selectedSize)}
+          onClick={() => {
+            if (selectedSize) {
+              addItem(product, selectedSize)
+              showToast('Producto agregado al carrito ✓')
+            }
+          }}
           disabled={product.stock === 0 || !selectedSize}
           className="bg-black text-white py-4 rounded-xl font-medium hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
         >
